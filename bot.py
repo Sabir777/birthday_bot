@@ -265,20 +265,21 @@ async def on_shutdown(bot: Bot):
 
 def register_handlers(dp: Dispatcher):
     """Регистрация обработчиков"""
-    # Команды
-    dp.message.register(start_command, CommandStart())
-    dp.message.register(help_command, Command("help"))
-    dp.message.register(add_command, Command("add"))
-    dp.message.register(list_command, Command("list"))
-    dp.message.register(delete_command, Command("delete"))
-    dp.message.register(setup_chat_command, Command("setup_chat"))
-
+    # Сначала регистрируем обработчики состояний (они должны быть раньше команд!)
     # Состояния для добавления коллеги
     dp.message.register(process_name, StateFilter(AddColleague.waiting_for_name))
     dp.message.register(process_date, StateFilter(AddColleague.waiting_for_date))
 
     # Состояния для удаления коллеги
     dp.message.register(process_delete_id, StateFilter(DeleteColleague.waiting_for_id))
+
+    # Затем команды
+    dp.message.register(start_command, CommandStart())
+    dp.message.register(help_command, Command("help"))
+    dp.message.register(add_command, Command("add"))
+    dp.message.register(list_command, Command("list"))
+    dp.message.register(delete_command, Command("delete"))
+    dp.message.register(setup_chat_command, Command("setup_chat"))
 
 
 async def main():
