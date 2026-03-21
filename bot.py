@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import Optional
 
 from aiogram import Bot, Dispatcher, F, types
-from aiogram.filters import Command, CommandStart
+from aiogram.filters import Command, CommandStart, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.storage.memory import MemoryStorage
@@ -272,13 +272,13 @@ def register_handlers(dp: Dispatcher):
     dp.message.register(list_command, Command("list"))
     dp.message.register(delete_command, Command("delete"))
     dp.message.register(setup_chat_command, Command("setup_chat"))
-    
+
     # Состояния для добавления коллеги
-    dp.message.register(process_name, AddColleague.waiting_for_name)
-    dp.message.register(process_date, AddColleague.waiting_for_date)
-    
+    dp.message.register(process_name, StateFilter(AddColleague.waiting_for_name))
+    dp.message.register(process_date, StateFilter(AddColleague.waiting_for_date))
+
     # Состояния для удаления коллеги
-    dp.message.register(process_delete_id, DeleteColleague.waiting_for_id)
+    dp.message.register(process_delete_id, StateFilter(DeleteColleague.waiting_for_id))
 
 
 async def main():
