@@ -4,12 +4,11 @@ After=network.target
 
 [Service]
 Type=simple
-User=raketa
-WorkingDirectory=/home/raketa/mnt_krolik_niderland/QWEN/birthday_bot
-Environment=PATH=/home/raketa/mnt_krolik_niderland/QWEN/birthday_bot/venv/bin
-ExecStart=/home/raketa/mnt_krolik_niderland/QWEN/birthday_bot/venv/bin/python bot.py
-Restart=always
-RestartSec=5
+User=krolik
+WorkingDirectory=/home/krolik/QWEN/birthday_bot
+Environment=PATH=/home/krolik/QWEN/birthday_bot/venv/bin
+ExecStart=/home/krolik/QWEN/birthday_bot/venv/bin/python bot.py
+Restart=on-failure
 
 [Install]
 WantedBy=multi-user.target
