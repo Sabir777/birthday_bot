@@ -103,22 +103,10 @@ async def help_command(message: types.Message):
     )
 
 
-async def add_command(message: types.Message, state: FSMContext):
-    """Обработчик команды /add"""
-    await message.answer("📝 Введите **имя коллеги**:", parse_mode="Markdown")
-    await state.set_state(AddColleague.waiting_for_name)
-
-
 async def process_name(message: types.Message, state: FSMContext):
     """Обработка имени коллеги"""
     text = message.text.strip()
-    
-    # Проверка на команды - если введена команда, отменяем текущее состояние
-    if text.startswith("/"):
-        await state.clear()
-        await message.answer("⚠️ Предыдущая операция отменена.\n\nВведите команду /add чтобы начать добавление коллеги заново.")
-        return
-    
+
     if not text:
         await message.answer("⚠️ Пожалуйста, введите корректное имя:")
         return
@@ -133,15 +121,16 @@ async def process_name(message: types.Message, state: FSMContext):
     await state.set_state(AddColleague.waiting_for_date)
 
 
+async def add_command(message: types.Message, state: FSMContext):
+    """Обработчик команды /add"""
+    await state.clear()
+    await message.answer("📝 Введите **имя коллеги**:", parse_mode="Markdown")
+    await state.set_state(AddColleague.waiting_for_name)
+
+
 async def process_date(message: types.Message, state: FSMContext):
     """Обработка даты рождения"""
     date_text = message.text.strip()
-
-    # Проверка на команды - если введена команда, отменяем текущее состояние
-    if date_text.startswith("/"):
-        await state.clear()
-        await message.answer("⚠️ Предыдущая операция отменена.\n\nВведите команду /add чтобы начать добавление коллеги заново.")
-        return
 
     # Проверка формата даты
     try:
@@ -197,19 +186,20 @@ async def list_command(message: types.Message):
 
 async def delete_command(message: types.Message, state: FSMContext):
     """Обработчик команды /delete"""
+    await state.clear()
     colleagues = db.get_all_colleagues()
-    
+
     if not colleagues:
         await message.answer("📭 Список коллег пуст. Нечего удалять.")
         return
-    
+
     response = "❌ **Удаление коллеги**\n\n"
     response += "Текущий список:\n"
     for col_id, name, month, day in colleagues:
         response += f"**ID {col_id}**: {name} — {day}.{month:02d}\n"
-    
+
     response += "\nВведите **ID** коллеги для удаления:"
-    
+
     await message.answer(response, parse_mode="Markdown")
     await state.set_state(DeleteColleague.waiting_for_id)
 
@@ -217,13 +207,7 @@ async def delete_command(message: types.Message, state: FSMContext):
 async def process_delete_id(message: types.Message, state: FSMContext):
     """Обработка ID для удаления"""
     text = message.text.strip()
-    
-    # Проверка на команды - если введена команда, отменяем текущее состояние
-    if text.startswith("/"):
-        await state.clear()
-        await message.answer("⚠️ Предыдущая операция отменена.\n\nВведите команду /delete чтобы начать удаление коллеги заново.")
-        return
-    
+
     try:
         colleague_id = int(text)
     except ValueError:
@@ -290,15 +274,16 @@ async def on_shutdown(bot: Bot):
 
 def register_handlers(dp: Dispatcher):
     """Регистрация обработчиков"""
-    # Сначала регистрируем обработчики состояний (они должны быть раньше команд!)
+    # Сначала обработчики состояний - они должны срабатывать когда бот в состоянии
+    # Фильтр ~F.text.startswith('/') исключает команды
     # Состояния для добавления коллеги
-    dp.message.register(process_name, StateFilter(AddColleague.waiting_for_name))
-    dp.message.register(process_date, StateFilter(AddColleague.waiting_for_date))
+    dp.message.register(process_name, StateFilter(AddColleague.waiting_for_name), ~F.text.startswith('/'))
+    dp.message.register(process_date, StateFilter(AddColleague.waiting_for_date), ~F.text.startswith('/'))
 
     # Состояния для удаления коллеги
-    dp.message.register(process_delete_id, StateFilter(DeleteColleague.waiting_for_id))
+    dp.message.register(process_delete_id, StateFilter(DeleteColleague.waiting_for_id), ~F.text.startswith('/'))
 
-    # Затем команды
+    # Затем команды - они сработают если бот не в состоянии или если введена команда
     dp.message.register(start_command, CommandStart())
     dp.message.register(help_command, Command("help"))
     dp.message.register(add_command, Command("add"))
