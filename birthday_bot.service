@@ -1,0 +1,15 @@
+[Unit]
+Description=Telegram Birthday Bot
+After=network.target
+
+[Service]
+Type=simple
+User=raketa
+WorkingDirectory=/home/raketa/mnt_krolik_niderland/QWEN/birthday_bot
+Environment=PATH=/home/raketa/mnt_krolik_niderland/QWEN/birthday_bot/venv/bin
+ExecStart=/home/raketa/mnt_krolik_niderland/QWEN/birthday_bot/venv/bin/python bot.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
