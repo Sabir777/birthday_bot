@@ -111,11 +111,19 @@ async def add_command(message: types.Message, state: FSMContext):
 
 async def process_name(message: types.Message, state: FSMContext):
     """Обработка имени коллеги"""
-    name = message.text.strip()
-    if not name:
-        await message.answer("⚠️ Пожалуйста, введите корректное имя:")
+    text = message.text.strip()
+    
+    # Проверка на команды - если введена команда, отменяем текущее состояние
+    if text.startswith("/"):
+        await state.clear()
+        await message.answer("⚠️ Предыдущая операция отменена.\n\nВведите команду /add чтобы начать добавление коллеги заново.")
         return
     
+    if not text:
+        await message.answer("⚠️ Пожалуйста, введите корректное имя:")
+        return
+
+    name = text
     await state.update_data(name=name)
     await message.answer(
         f"✅ Имя сохранено: **{name}**\n\n"
@@ -128,12 +136,21 @@ async def process_name(message: types.Message, state: FSMContext):
 async def process_date(message: types.Message, state: FSMContext):
     """Обработка даты рождения"""
     date_text = message.text.strip()
-    
+
+    # Проверка на команды - если введена команда, отменяем текущее состояние
+    if date_text.startswith("/"):
+        await state.clear()
+        await message.answer("⚠️ Предыдущая операция отменена.\n\nВведите команду /add чтобы начать добавление коллеги заново.")
+        return
+
     # Проверка формата даты
     try:
-        day, month = map(int, date_text.split("."))
+        parts = date_text.split(".")
+        if len(parts) != 2:
+            raise ValueError("Неверный формат: используйте ДД.ММ")
+        day, month = map(int, parts)
         if not (1 <= day <= 31 and 1 <= month <= 12):
-            raise ValueError()
+            raise ValueError("Неверный день или месяц")
     except (ValueError, AttributeError):
         await message.answer(
             "⚠️ Неверный формат даты. Используйте формат **ДД.ММ** (например, 15.05):",
@@ -199,8 +216,16 @@ async def delete_command(message: types.Message, state: FSMContext):
 
 async def process_delete_id(message: types.Message, state: FSMContext):
     """Обработка ID для удаления"""
+    text = message.text.strip()
+    
+    # Проверка на команды - если введена команда, отменяем текущее состояние
+    if text.startswith("/"):
+        await state.clear()
+        await message.answer("⚠️ Предыдущая операция отменена.\n\nВведите команду /delete чтобы начать удаление коллеги заново.")
+        return
+    
     try:
-        colleague_id = int(message.text.strip())
+        colleague_id = int(text)
     except ValueError:
         await message.answer("⚠️ Введите корректный числовой ID:")
         return
